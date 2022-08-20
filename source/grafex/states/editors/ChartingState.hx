@@ -1,6 +1,9 @@
 package grafex.states.editors;
 
 import grafex.states.playstate.PlayState;
+
+import grafex.system.log.GrfxLogger.log;
+import grafex.system.log.GrfxLogger;
 import grafex.sprites.characters.Character;
 import grafex.sprites.characters.Character.CharacterFile;
 import grafex.states.substates.LoadingState;
@@ -272,6 +275,8 @@ class ChartingState extends MusicBeatState
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("Chart Editor", StringTools.replace(_song.song, '-', ' '));
 		#end
+
+		GrfxLogger.log('info', 'Started charting "' + _song + '"');
 
 		vortex = FlxG.save.data.chart_vortex;
 		var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
@@ -3089,6 +3094,7 @@ function reloadGridLayer() {
 		_file.removeEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 		_file = null;
 		FlxG.log.notice("Successfully saved LEVEL DATA.");
+		GrfxLogger.log('info', "Successfully saved LEVEL DATA in " + Paths.formatToSongPath(_song.song) + (Utils.getDifficultyFilePath() == null ? Utils.getDifficultyFilePath() : '') + ".json");
 	}
 
 	/**

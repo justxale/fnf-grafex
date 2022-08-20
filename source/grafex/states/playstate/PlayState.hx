@@ -266,7 +266,8 @@ class PlayState extends MusicBeatState
 	public var iconGroup:FlxTypedGroup<HealthIcon>;
 	public var iconP1:HealthIcon;
 	public var iconP2:HealthIcon;
-	public var camHUD:FlxCamera;
+	public var camHUD:FlxCamera; // FUCKIN LUA - PurSnake
+	public var camHUDElem:FlxCamera; // khm - PurSnake
 	public var camPAUSE:FlxCamera;
 	public var camUnderHUDBeforeGame:FlxCamera;  // For some shit like UnderDelayLanes  and becouse noone care- PurSnake
 	public var camGame:FlxCamera;
@@ -450,6 +451,10 @@ class PlayState extends MusicBeatState
 		camGame = new FlxCamera();
 		camHUD = new FlxCamera();
 		camHUD.bgColor.alpha = 0;
+
+		camHUDElem = new FlxCamera();
+		camHUDElem.bgColor.alpha = 0;
+
         camUnderHUDBeforeGame = new FlxCamera();
 
 		if(ClientPrefs.greenScreenMode) {
@@ -478,13 +483,14 @@ class PlayState extends MusicBeatState
 		camPAUSE.bgColor.alpha = 0;
 
 		FlxG.cameras.reset(camGame);
-		FlxG.cameras.add(camUnderHUDBeforeGame); // Here
+		FlxG.cameras.add(camUnderHUDBeforeGame);
+		FlxG.cameras.add(camHUD);
         FlxG.cameras.add(camNOTEHUD);
         FlxG.cameras.add(camSus);
-        // camSus.alpha = ClientPrefs.SusTransper; Not now - PurSnake
 		FlxG.cameras.add(camNOTES);
+		FlxG.cameras.add(camHUDElem);
         FlxG.cameras.add(camOther);
-		FlxG.cameras.add(camHUD);
+
 		FlxG.cameras.add(camPAUSE);
 		grpNoteSplashes = new FlxTypedGroup<NoteSplash>();
 
@@ -503,13 +509,16 @@ class PlayState extends MusicBeatState
         camGame.setFilters(filtersgame);
         camNOTEHUD.setFilters(filtershud);
         camHUD.setFilters(filtershud);
+		camHUDElem.setFilters(filtershud);
         camSus.setFilters(filterSUSnotes); 
         camNOTES.setFilters(filtersnotes); 
         camGame.filtersEnabled = true;
         camHUD.filtersEnabled = true; 
+		camHUDElem.filtersEnabled = true; 
         camNOTEHUD.filtersEnabled = true;
         camSus.filtersEnabled = true;
         camNOTES.filtersEnabled = true;
+
 
 		persistentUpdate = true;
 		persistentDraw = true;
@@ -1462,7 +1471,7 @@ class PlayState extends MusicBeatState
 		judgementCounter.borderSize = 1.5;
 		judgementCounter.borderQuality = 2;
 		judgementCounter.scrollFactor.set();
-		judgementCounter.cameras = [camHUD];
+		judgementCounter.cameras = [camHUDElem];
 		judgementCounter.screenCenter(X);
 		judgementCounter.text = 'Max Combo: ${maxCombo} | Sicks: ${sicks} | Goods: ${goods} | Bads: ${bads} | Shits: ${shits} | Average: ${Math.round(averageMs)}ms |  Health: ${Std.string(Math.floor(Std.parseFloat(Std.string((maxHealthProb) / 2))))} %';
         if(ClientPrefs.showJudgement) 
@@ -1503,24 +1512,24 @@ class PlayState extends MusicBeatState
 		strumLineNotes.cameras = [camNOTEHUD];
 		grpNoteSplashes.cameras = [camNOTEHUD];
 		notes.cameras = [camNOTES];
-		healthBar.cameras = [camHUD];
-		healthBarBG.cameras = [camHUD];
-        healthBarWN.cameras = [camHUD];
-        healthStrips.cameras = [camHUD];
-		iconP1.cameras = [camHUD];
-		iconP2.cameras = [camHUD];
-		scoreTxt.cameras = [camHUD];
-		botplayTxt.cameras = [camHUD];
+		healthBar.cameras = [camHUDElem];
+		healthBarBG.cameras = [camHUDElem];
+        healthBarWN.cameras = [camHUDElem];
+        healthStrips.cameras = [camHUDElem];
+		iconP1.cameras = [camHUDElem];
+		iconP2.cameras = [camHUDElem];
+		scoreTxt.cameras = [camHUDElem];
+		botplayTxt.cameras = [camHUDElem];
         laneunderlay.cameras = [camUnderHUDBeforeGame];
 		laneunderlayOpponent.cameras = [camUnderHUDBeforeGame];
-		timeBar.cameras = [camHUD];
-		timeBarBG.cameras = [camHUD];
-		timeTxt.cameras = [camHUD];
-		doof.cameras = [camHUD];
-        vintage.cameras = [camHUD];
-		badLoseVin.cameras = [camHUD];
-        songTxt.cameras = [camHUD];
-		healthBarHigh.cameras = [camHUD];
+		timeBar.cameras = [camHUDElem];
+		timeBarBG.cameras = [camHUDElem];
+		timeTxt.cameras = [camHUDElem];
+		doof.cameras = [camHUDElem];
+        vintage.cameras = [camHUDElem];
+		badLoseVin.cameras = [camHUDElem];
+        songTxt.cameras = [camHUDElem];
+		healthBarHigh.cameras = [camHUDElem];
 
 		startingSong = true;
 
@@ -1854,6 +1863,12 @@ class PlayState extends MusicBeatState
 		return null;
 	}
 
+	public function getLuaObject(tag:String, text:Bool=true):FlxSprite {
+		if(modchartSprites.exists(tag)) return modchartSprites.get(tag);
+		if(text && modchartTexts.exists(tag)) return modchartTexts.get(tag);
+		return null;
+	}
+
 	function startCharacterPos(char:Character, ?gfCheck:Bool = false) {
 		if(gfCheck && char.curCharacter.startsWith('gf')) { //IF DAD IS GIRLFRIEND, HE GOES TO HER POSITION
 			char.setPosition(GF_X, GF_Y);
@@ -1894,7 +1909,7 @@ class PlayState extends MusicBeatState
 				}
 				cutsceneDialogue.nextDialogueThing = startNextDialogue;
 				cutsceneDialogue.skipDialogueThing = skipDialogue;
-				cutsceneDialogue.cameras = [camHUD];
+				cutsceneDialogue.cameras = [camHUDElem];
 				add(cutsceneDialogue);
 			} else {
 				FlxG.log.warn('Your cutscene file is badly formatted!');
@@ -1933,7 +1948,7 @@ class PlayState extends MusicBeatState
 			}
 			psychDialogue.nextDialogueThing = startNextDialogue;
 			psychDialogue.skipDialogueThing = skipDialogue;
-			psychDialogue.cameras = [camHUD];
+			psychDialogue.cameras = [camHUDElem];
 			add(psychDialogue);
 		} else {
 			FlxG.log.warn('Your dialogue file is badly formatted!');
@@ -2353,7 +2368,13 @@ class PlayState extends MusicBeatState
 
 	public function startCountdown():Void
 	{
-		GrfxLogger.log('info', 'Loaded Song: "' + SONG.song + '"');
+		GrfxLogger.log('info', 'Successfully Loaded "'+SONG.song+'" on '+storyDifficultyText+' 
+		Stage: '+curStage+'
+		Boyfriend: '+SONG.player1.toUpperCase()+'
+		Girlfriend: '+SONG.gfVersion.toUpperCase()+'
+		Opponent: '+SONG.player2.toUpperCase());
+		
+		GrfxLogger.log('info', 'Started Song: "' + SONG.song + '"');
 		GrfxLogger.log('info', 'Botplay: ' + ClientPrefs.getGameplaySetting('botplay', false).toString());
 		if(startedCountdown) {
 			callOnLuas('onStartCountdown', []);
@@ -3155,13 +3176,13 @@ class PlayState extends MusicBeatState
 
 		maxHealthProb = health * 100;
 
-        for (hudcam in [camSus, camNOTES, camNOTEHUD, camUnderHUDBeforeGame]) {
+        for (hudcam in [camHUDElem, camSus, camNOTES, camNOTEHUD, camUnderHUDBeforeGame]) {
         if (hudcam != null) {
 		hudcam.zoom = camHUD.zoom;
-                hudcam.visible = camHUD.visible;
-                hudcam.x = camHUD.x;
-                hudcam.y = camHUD.y;
-                hudcam.alpha = camHUD.alpha;
+        hudcam.visible = camHUD.visible;
+        hudcam.x = camHUD.x;
+        hudcam.y = camHUD.y;
+        hudcam.alpha = camHUD.alpha;
 		    }  
         }
 
@@ -3346,12 +3367,24 @@ class PlayState extends MusicBeatState
 		        iconP2.x = healthBar.x + (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01)) - (iconP2.width - iconOffset);
 				
              case 'Modern':		
-				for (s in members)
+				var mult:Float = FlxMath.lerp(1, iconP1.scale.x, Utils.boundTo(1 - (elapsed * 9), 0, 1));
+				iconP1.scale.set(mult, mult);
+				iconP1.updateHitbox();
+		
+				var mult:Float = FlxMath.lerp(1, iconP2.scale.x, Utils.boundTo(1 - (elapsed * 9), 0, 1));
+				iconP2.scale.set(mult, mult);
+				iconP2.updateHitbox();
+		
+				iconP1.x = healthBar.x + (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01)) + (150 * iconP1.scale.x - 150) / 2 - iconOffset;
+				iconP2.x = healthBar.x + (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01)) - (150 * iconP2.scale.x) / 2 - iconOffset * 2;
+
+
+		    	for (s in members)
 				{
 					if (Std.isOfType(s, HealthIcon))
 					{
 						var icon = cast(s, HealthIcon);
-						icon.cameras = [camHUD];
+						icon.cameras = [camHUDElem];
 						remove(icon);
 						iconGroup.add(icon);
 					}
@@ -3392,10 +3425,7 @@ class PlayState extends MusicBeatState
 					icon.y = healthBar.y + (healthBar.height / 2) - (icon.height / 2);
 				});		
                 
-            case 'Classic':
-				iconP1.setGraphicSize(Std.int(FlxMath.lerp(150, iconP1.width, 0.75)));
-		        iconP2.setGraphicSize(Std.int(FlxMath.lerp(150, iconP2.width, 0.75)));
-        
+            case 'Classic':        
 		        iconP1.updateHitbox();
 		        iconP2.updateHitbox();
         
@@ -3487,6 +3517,7 @@ class PlayState extends MusicBeatState
 		{
 			FlxG.camera.zoom = FlxMath.lerp(defaultCamZoom, FlxG.camera.zoom, Utils.boundTo(1 - (elapsed * 3.125 * camZoomingDecay), 0, 1));
 			camHUD.zoom = FlxMath.lerp(1, camHUD.zoom, Utils.boundTo(1 - (elapsed * 3.125 * camZoomingDecay), 0, 1));
+			camHUDElem.zoom = FlxMath.lerp(1, camHUD.zoom, Utils.boundTo(1 - (elapsed * 3.125 * camZoomingDecay), 0, 1));
             camNOTES.zoom = FlxMath.lerp(1, camHUD.zoom, Utils.boundTo(1 - (elapsed * 3.125 * camZoomingDecay), 0, 1));
 			camSus.zoom = FlxMath.lerp(1, camHUD.zoom, Utils.boundTo(1 - (elapsed * 3.125 * camZoomingDecay), 0, 1));
 			camNOTEHUD.zoom = FlxMath.lerp(1, camHUD.zoom, Utils.boundTo(1 - (elapsed * 3.125 * camZoomingDecay), 0, 1));
@@ -4332,8 +4363,8 @@ class PlayState extends MusicBeatState
 				if (storyPlaylist.length <= 0)
 				{
 					FlxG.sound.playMusic(Paths.music('freakyMenu'));
-                                        FlxG.sound.music.time = 9400;
-				        Conductor.changeBPM(102);
+                    FlxG.sound.music.time = 9400;
+					Conductor.changeBPM(TitleState.titleJSON.bpm);
 
 					cancelMusicFadeTween();
 					CustomFadeTransition.nextCamera = camOther;
@@ -4410,7 +4441,7 @@ class PlayState extends MusicBeatState
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				changedDifficulty = false;
                 FlxG.sound.music.time = 9400;
-				Conductor.changeBPM(102);
+				Conductor.changeBPM(TitleState.titleJSON.bpm);
 				WeekData.loadTheFirstEnabledMod();
 			}
 			transitioning = true;
@@ -5402,13 +5433,14 @@ class PlayState extends MusicBeatState
 
         switch(ClientPrefs.healthIconBop)
 			{
-				/*case 'Modern':
+				case 'Modern':
+					
 					iconP1.scale.set(1.2, 1.2);
 					iconP2.scale.set(1.2, 1.2);
 	
 					iconP1.updateHitbox();
 					iconP2.updateHitbox();
-		        */
+		        
 				case 'Classic':
 					
 		            iconP1.setGraphicSize(Std.int(iconP1.width + 30));
@@ -5887,7 +5919,7 @@ class PlayState extends MusicBeatState
 				inCutscene = true;
 				var bg = new FlxSprite(-FlxG.width, -FlxG.height).makeGraphic(FlxG.width * 3, FlxG.height * 3, FlxColor.BLACK);
 				bg.scrollFactor.set();
-				bg.cameras = [camHUD];
+				bg.cameras = [camHUDElem];
 				add(bg);
 	
 				switch(endEvent)
