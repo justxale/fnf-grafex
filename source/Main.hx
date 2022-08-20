@@ -1,6 +1,7 @@
 package;
 
 
+import sys.io.Process;
 import flixel.FlxG;
 import flixel.FlxGame;
 import flixel.FlxState;
@@ -103,32 +104,30 @@ class Main extends Sprite
 	}
 
 	function onCrash(e:UncaughtErrorEvent):Void
+	{
+		GrfxLogger.log('error', e.error);
+		GrfxLogger.crash(e.error);
+		var errMsg:String = "";
+		var path:String;
+		var callStack:Array<StackItem> = CallStack.exceptionStack(true);
+		var dateNow:String = Date.now().toString();				
+
+		dateNow = dateNow.replace(" ", "_");
+		dateNow = dateNow.replace(":", "'");
+
+		path = "./logs/crash/" + "Grafex_" + dateNow + ".log";
+		for (stackItem in callStack)
 		{
-			GrfxLogger.log('error', e.error);
-			GrfxLogger.crash(e.error);
-			var errMsg:String = "";
-			var path:String;
-			var callStack:Array<StackItem> = CallStack.exceptionStack(true);
-			var dateNow:String = Date.now().toString();				
-	
-			dateNow = dateNow.replace(" ", "_");
-			dateNow = dateNow.replace(":", "'");
-	
-			path = "./logs/crash/" + "Grafex_" + dateNow + ".log";
-
-			for (stackItem in callStack)
+			switch (stackItem)
 			{
-				switch (stackItem)
-				{
-					case FilePos(s, file, line, column):
-						errMsg += file + " (line " + line + ")\n";
-					default:
-						Sys.println(stackItem);
-				}
+				case FilePos(s, file, line, column):
+					errMsg += file + " (line " + line + ")\n";
+				default:
+					Sys.println(stackItem);
 			}
-
-			
 		}
+		new Process();
+	}
 
 
 	private function init(?E:Event):Void

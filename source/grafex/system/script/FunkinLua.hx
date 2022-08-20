@@ -1,5 +1,6 @@
 package grafex.system.script;
 
+import grafex.states.playstate.PlayState;
 import grafex.states.substates.PauseSubState;
 import grafex.data.WeekData;
 import grafex.states.StoryMenuState;
@@ -47,7 +48,6 @@ import sys.io.File;
 #end
 import Type.ValueType;
 import grafex.cutscenes.DialogueBoxPsych;
-import grafex.states.PlayState;
 
 #if hscript
 import hscript.Parser;
@@ -95,7 +95,7 @@ class FunkinLua {
 			var result:Dynamic = LuaL.dofile(lua, script);
 			var resultStr:String = Lua.tostring(lua, result);
 			if(resultStr != null && result != 0) {
-				log('Warning', 'Error on lua script! ' + resultStr);
+				log('LuaWarning', 'Error on lua script! ' + resultStr);
 				#if windows
 				lime.app.Application.current.window.alert(resultStr, 'Error on lua script!');
 				#else
@@ -105,11 +105,11 @@ class FunkinLua {
 				return;
 			}
 		}catch(e:Dynamic){
-			log('Error', e);
+			log('LuaError', e);
 			return;
 		}
 		scriptName = script;
-		log('info', 'Lua file loaded succesfully: ' + script);
+		log('Luainfo', 'Lua file loaded succesfully: ' + script);
 
 		#if (haxe >= "4.0.0")
 		accessedProps = new Map();
@@ -611,7 +611,6 @@ class FunkinLua {
 						}else{
 							Lua.pushnil(lua);
 						}
-						// TODO: table
 
 						Lua.pop(luaInstance.lua,1); // remove the global
 
@@ -716,7 +715,6 @@ class FunkinLua {
 								Lua.pushboolean(lua, Lua.toboolean(luaInstance.lua, -2));
 								pop++;
 							}
-							// TODO: table
 
 
 							// then the value
@@ -730,7 +728,6 @@ class FunkinLua {
 								Lua.pushboolean(lua, Lua.toboolean(luaInstance.lua, -1));
 								pop++;
 							}
-							// TODO: table
 
 							if(pop==2)Lua.rawset(lua, tableIdx); // then set it
 			        Lua.pop(luaInstance.lua, 1); // for the loop
@@ -2987,7 +2984,7 @@ Lua_helper.add_callback(lua, "getScore", function() {
 					if(errorHandler!=null){
 						errorHandler(err);
 					}else{
-						log('error', err);
+						log('Luaerror', err);
 					}
 				}else{
 					var conv:Dynamic = cast getResult(lua, result);
@@ -2999,7 +2996,7 @@ Lua_helper.add_callback(lua, "getScore", function() {
 				return null;
 			}
 		} catch(e:Dynamic) {
-			log('error', e);
+			log('Luaerror', e);
 		}
 		#end
 		return Function_Continue;

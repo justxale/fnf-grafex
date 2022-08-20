@@ -1,5 +1,6 @@
-package grafex.states;
+package grafex.states.playstate;
 
+import grafex.system.loader.GrfxModAssetsLoader;
 import grafex.system.log.GrfxLogger.log;
 import grafex.system.log.GrfxLogger;
 import grafex.util.Utils;
@@ -132,7 +133,7 @@ class PlayState extends MusicBeatState
 	public static var STRUM_X = 42;
 	public static var STRUM_X_MIDDLESCROLL = -278;
 
-    public var shaderUpdates:Array<Float->Void> = [];
+    //public var shaderUpdates:Array<Float->Void> = [];
 	
 	public var modchartTweens:Map<String, FlxTween> = new Map<String, FlxTween>();
 	public var modchartSprites:Map<String, ModchartSprite> = new Map<String, ModchartSprite>();
@@ -149,17 +150,11 @@ class PlayState extends MusicBeatState
 
 	//event variables
 	private var isCameraOnForcedPos:Bool = false;
-	#if (haxe >= "4.0.0")
+
 	public var boyfriendMap:Map<String, Boyfriend> = new Map();
 	public var dadMap:Map<String, Character> = new Map();
 	public var gfMap:Map<String, Character> = new Map();
-	public var variables:Map<String, Dynamic> = new Map();
-	#else
-	public var boyfriendMap:Map<String, Boyfriend> = new Map<String, Boyfriend>();
-	public var dadMap:Map<String, Character> = new Map<String, Character>();
-	public var gfMap:Map<String, Character> = new Map<String, Character>();
 	public var variables:Map<String, Dynamic> = new Map<String, Dynamic>();
-	#end
 
 	public var BF_X:Float = 770;
 	public var BF_Y:Float = 100;
@@ -205,7 +200,7 @@ class PlayState extends MusicBeatState
 	public var notes:FlxTypedGroup<Note>;
 	public var unspawnNotes:Array<Note> = [];
 	public var eventNotes:Array<EventNote> = [];
-    public static var currentPState:PlayState;
+    //public static var currentPState:PlayState;
 
 	private var strumLine:FlxSprite;
 	public static var swapStrumLines:Bool = false;
@@ -349,7 +344,6 @@ class PlayState extends MusicBeatState
 
 	public var defaultCamZoom:Float = 1.05;
 	public var currentCamBeat:Float = 4;
-	public var camFollowLerp:Float = 0.04;
 
     var vintage:FlxSprite;
 	var badLoseVin:FlxSprite;
@@ -367,8 +361,6 @@ class PlayState extends MusicBeatState
 	public var boyfriendCameraOffset:Array<Float> = null;
 	public var opponentCameraOffset:Array<Float> = null;
 	public var girlfriendCameraOffset:Array<Float> = null;
-
-    public static var displaySongName:String = "";
    
 	#if desktop
 	// Discord RPC variables
@@ -377,14 +369,8 @@ class PlayState extends MusicBeatState
 	var detailsPausedText:String = "";
 	#end
 
-    //Achievement shit
-	var keysPressed:Array<Bool> = [];
-	var boyfriendIdleTime:Float = 0.0;
-	var boyfriendIdled:Bool = false;
-
 	// Lua shit
 	public static var instance:PlayState;
-	public var devStage:String = null;
 
 	public var luaArray:Array<FunkinLua> = [];
 	private var luaDebugGroup:FlxTypedGroup<DebugLuaText>;
@@ -404,8 +390,10 @@ class PlayState extends MusicBeatState
 
 	override public function create()
 	{
+		Paths.clearStoredMemory();
+
 		instance = this;
-        currentPState = this;
+        //currentPState = this;
 
 		log('info', 'Switched state to: ' + Type.getClassName(Type.getClass(this)));
 
@@ -447,12 +435,6 @@ class PlayState extends MusicBeatState
 		rating.score = 50;
 		rating.noteSplash = false;
 		ratingsData.push(rating);
-
-		// For the "Just the Two of Us" achievement
-		for (i in 0...keysArray.length)
-		{
-			keysPressed.push(false);
-		}
 
 		if (FlxG.sound.music != null)
 			FlxG.sound.music.stop();
@@ -578,7 +560,6 @@ class PlayState extends MusicBeatState
 		var songName:String = Paths.formatToSongPath(SONG.song);
 		curStage = SONG.stage;
 
-        displaySongName = StringTools.replace(songName, '-', ' ');
 		Application.current.window.title = Main.appTitle + ' // ' + /* Utils.getArtist(SONG.song.toLowerCase()) + ' - ' + */ StringTools.replace(SONG.song, '-', ' ');   //i should rewrite getArtist in future - PurSnake
 
 		if(SONG.stage == null || SONG.stage.length < 1)
@@ -657,6 +638,11 @@ class PlayState extends MusicBeatState
 		boyfriendGroup = new FlxSpriteGroup(BF_X, BF_Y);
 		dadGroup = new FlxSpriteGroup(DAD_X, DAD_Y);
 		gfGroup = new FlxSpriteGroup(GF_X, GF_Y);
+
+		FlxG.camera.followLerp = 0.04;
+
+		// TODO: delete this lol
+		throw new haxe.Exception('Just testing');
 
 		switch (curStage)
 		{
@@ -1017,6 +1003,9 @@ class PlayState extends MusicBeatState
 				if(!ClientPrefs.lowQuality) foregroundSprites.add(new BGSprite('tank4', 1300, 900, 1.5, 1.5, ['fg']));
 				foregroundSprites.add(new BGSprite('tank5', 1620, 700, 1.5, 1.5, ['fg']));
 				if(!ClientPrefs.lowQuality) foregroundSprites.add(new BGSprite('tank3', 1300, 1200, 3.5, 2.5, ['fg']));
+
+			case 'bunker':
+				GrfxModAssetsLoader.generateStage('bunker');
 		}
 
 		switch(Paths.formatToSongPath(SONG.song))
@@ -3165,8 +3154,6 @@ class PlayState extends MusicBeatState
 		wiggleShit.update(elapsed);
 
 		maxHealthProb = health * 100;
-		
-		FlxG.camera.followLerp = camFollowLerp;
 
         for (hudcam in [camSus, camNOTES, camNOTEHUD, camUnderHUDBeforeGame]) {
         if (hudcam != null) {
@@ -3321,14 +3308,6 @@ class PlayState extends MusicBeatState
 		if(!inCutscene) {
 			var lerpVal:Float = Utils.boundTo(elapsed * 2.4 * cameraSpeed, 0, 1);
 			camFollowPos.setPosition(FlxMath.lerp(camFollowPos.x, camFollow.x, lerpVal), FlxMath.lerp(camFollowPos.y, camFollow.y, lerpVal));
-			if(!startingSong && !endingSong && boyfriend.animation.curAnim != null && boyfriend.animation.curAnim.name.startsWith('idle')) {
-				boyfriendIdleTime += elapsed;
-				if(boyfriendIdleTime >= 0.15) { // Kind of a mercy thing for making the achievement easier to get as it's apparently frustrating to some playerss
-					boyfriendIdled = true;
-				}
-			} else {
-				boyfriendIdleTime = 0;
-			}
 		}
 
 		//healthThing.text = "Health: " + Std.string(Math.floor(Std.parseFloat(Std.string((maxHealthProb) / 2)))) + '%';
@@ -3363,13 +3342,10 @@ class PlayState extends MusicBeatState
     	switch(ClientPrefs.healthIconBop)
     	   {
     		case 'Grafex':	
-    
 		        iconP1.x = healthBar.x + (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01) - iconOffset);
 		        iconP2.x = healthBar.x + (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01)) - (iconP2.width - iconOffset);
 				
              case 'Modern':		
-
-
 				for (s in members)
 				{
 					if (Std.isOfType(s, HealthIcon))
@@ -3382,43 +3358,41 @@ class PlayState extends MusicBeatState
 				}
 
 				iconGroup.forEach(function(icon:HealthIcon)
+				{
+					if (!icon.visible || !icon.auto)
+						return;
+					var decBeat = curDecBeat;
+					if (decBeat < 0)
+						decBeat = 1 + (decBeat % 1);
+					
+					var iconlerp = FlxMath.lerp(1.15, 1, FlxEase.cubeOut(decBeat % 1));
+					icon.scale.set(iconlerp, iconlerp);
+					icon.scale.set(iconlerp, iconlerp);
+					icon.offset.x = -75;
+					icon.offset.x = -75;
+				
+					if (icon.isPlayer)
 					{
-						if (!icon.visible || !icon.auto)
-							return;
-						var decBeat = curDecBeat;
-						if (decBeat < 0)
-							decBeat = 1 + (decBeat % 1);
-						
-						var iconlerp = FlxMath.lerp(1.15, 1, FlxEase.cubeOut(decBeat % 1));
-						icon.scale.set(iconlerp, iconlerp);
-						icon.scale.set(iconlerp, iconlerp);
-
-						icon.offset.x = -75;
-						icon.offset.x = -75;
-					
-						if (icon.isPlayer)
-						{
-							icon.x = healthBar.x
-								+ (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01) - iconOffset)
-								+ icon.offset.x
-								+ (icon.width * (icon.scale.x - 1) / 4)
-								+ (playerOffset * 85 * icon.scale.x);
-						}
-						else
-						{
-							icon.x = healthBar.x
-								+ (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01))
-								- (icon.width - iconOffset)
-								+ icon.offset.x
-								- (icon.width * (icon.scale.x - 1) / 2)
-								- (opponentOffset * 85 * icon.scale.x);
-						}
-					
-						icon.y = healthBar.y + (healthBar.height / 2) - (icon.height / 2);
-					});		
+						icon.x = healthBar.x
+							+ (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01) - iconOffset)
+							+ icon.offset.x
+							+ (icon.width * (icon.scale.x - 1) / 4)
+							+ (playerOffset * 85 * icon.scale.x);
+					}
+					else
+					{
+						icon.x = healthBar.x
+							+ (healthBar.width * (FlxMath.remapToRange(healthBar.percent, 0, 100, 100, 0) * 0.01))
+							- (icon.width - iconOffset)
+							+ icon.offset.x
+							- (icon.width * (icon.scale.x - 1) / 2)
+							- (opponentOffset * 85 * icon.scale.x);
+					}
+				
+					icon.y = healthBar.y + (healthBar.height / 2) - (icon.height / 2);
+				});		
                 
             case 'Classic':
-
 				iconP1.setGraphicSize(Std.int(FlxMath.lerp(150, iconP1.width, 0.75)));
 		        iconP2.setGraphicSize(Std.int(FlxMath.lerp(150, iconP2.width, 0.75)));
         
@@ -3431,9 +3405,10 @@ class PlayState extends MusicBeatState
 
         if (health > 2)
 			health = 2;
+
 		if(isHealthCheckingEnabled)
 		{
-		    if (iconP1.animation.frames == 3) {
+			iconP1.animation.frames == 3 ? {
 		        if (healthBar.percent < 20) {
 		        	iconP1.animation.curAnim.curFrame = 1;
                     shakeFromLosing(iconP1); }
@@ -3441,13 +3416,10 @@ class PlayState extends MusicBeatState
 		        	iconP1.animation.curAnim.curFrame = 2;
 		        else
 		        	iconP1.animation.curAnim.curFrame = 0;
-		    } else {
-		        if (healthBar.percent < 20)
-		        	iconP1.animation.curAnim.curFrame = 1;
-		        else
-		        	iconP1.animation.curAnim.curFrame = 0;
+		    } : {
+		        healthBar.percent < 20 ? iconP1.animation.curAnim.curFrame = 1 : iconP1.animation.curAnim.curFrame = 0;
 		    }
-		    if (iconP2.animation.frames == 3) {
+		    iconP2.animation.frames == 3 ? {
 		        if (healthBar.percent > 80) {
                     shakeFromLosing(iconP2);
 		        	iconP2.animation.curAnim.curFrame = 1; }
@@ -3455,12 +3427,9 @@ class PlayState extends MusicBeatState
 		        	iconP2.animation.curAnim.curFrame = 2;
 		        else 
 		        	iconP2.animation.curAnim.curFrame = 0;
-		    } else {
-		        if (healthBar.percent > 80)
-		        	iconP2.animation.curAnim.curFrame = 1;
-		        else 
-		        	iconP2.animation.curAnim.curFrame = 0;
-		    }	
+		    } : {
+		        healthBar.percent > 80 ? iconP2.animation.curAnim.curFrame = 1 : iconP2.animation.curAnim.curFrame = 0;
+		    }
 		}
 
 		if (FlxG.keys.anyJustPressed(debugKeysCharacter) && !endingSong && !inCutscene) {
@@ -3472,22 +3441,16 @@ class PlayState extends MusicBeatState
 		}
 
 		
-        if(healthBar.percent < 30)
-		FlxTween.tween(badLoseVin, {alpha:0.75}, 1, {ease: FlxEase.linear});
-        else
-        FlxTween.tween(badLoseVin, {alpha: 0}, 1, {ease: FlxEase.linear});
+        healthBar.percent < 30 ? FlxTween.tween(badLoseVin, {alpha:0.75}, 1, {ease: FlxEase.linear}) : FlxTween.tween(badLoseVin, {alpha: 0}, 1, {ease: FlxEase.linear});
              
-        if (startingSong)
-		{
+        startingSong ? {
 			if (startedCountdown)
 			{
 				Conductor.songPosition += FlxG.elapsed * 1000;
 				if (Conductor.songPosition >= 0)
 					startSong();
 			}
-		}
-		else
-		{
+		} : {
 			Conductor.songPosition += FlxG.elapsed * 1000;
 
 			if (!paused)
@@ -3596,16 +3559,8 @@ class PlayState extends MusicBeatState
 				strumAngle += daNote.offsetAngle;
 				strumAlpha *= daNote.multAlpha;
 
-				if (strumScroll) //Downscroll
-				{
-					//daNote.y = (strumY + 0.45 * (Conductor.songPosition - daNote.strumTime) * (songSpeed * daNote.multSpeed));
-					daNote.distance = (0.45 * (Conductor.songPosition - daNote.strumTime) * (songSpeed * daNote.multSpeed));
-				}
-				else //Upscroll
-				{
-					//daNote.y = (strumY - 0.45 * (Conductor.songPosition - daNote.strumTime) * (songSpeed * daNote.multSpeed));
-					daNote.distance = (-0.45 * (Conductor.songPosition - daNote.strumTime) * (songSpeed * daNote.multSpeed));
-				}
+				strumScroll ? daNote.distance = (0.45 * (Conductor.songPosition - daNote.strumTime) * (songSpeed * daNote.multSpeed)) //Downscroll
+				: daNote.distance = (-0.45 * (Conductor.songPosition - daNote.strumTime) * (songSpeed * daNote.multSpeed)); //Upscroll
 
 				var angleDir = strumDirection * Math.PI / 180;
 				if (daNote.copyAngle)
@@ -3658,8 +3613,7 @@ class PlayState extends MusicBeatState
 				if(strumGroup.members[daNote.noteData].sustainReduce && daNote.isSustainNote && (daNote.mustPress || !daNote.ignoreNote) &&
 					(!daNote.mustPress || (daNote.wasGoodHit || (daNote.prevNote.wasGoodHit && !daNote.canBeHit))))
 				{
-					if (strumScroll)
-					{
+					strumScroll ? {
 						if(daNote.y - daNote.offset.y * daNote.scale.y + daNote.height >= center)
 						{
 							var swagRect = new FlxRect(0, 0, daNote.frameWidth, daNote.frameHeight);
@@ -3668,9 +3622,7 @@ class PlayState extends MusicBeatState
 
 							daNote.clipRect = swagRect;
 						}
-					}
-					else
-					{
+					} :	{
 						if (daNote.y + daNote.offset.y * daNote.scale.y <= center)
 						{
 							var swagRect = new FlxRect(0, 0, daNote.width / daNote.scale.x, daNote.height / daNote.scale.y);
@@ -3718,10 +3670,10 @@ class PlayState extends MusicBeatState
 		setOnLuas('cameraY', camFollowPos.y);
 		setOnLuas('botPlay', cpuControlled);
 		callOnLuas('onUpdatePost', [elapsed]);
-                for (i in shaderUpdates)
+        /*for (i in shaderUpdates)
 		{
 			i(elapsed);
-		}
+		}*/
     }
 
     function pauseState()
@@ -3795,12 +3747,8 @@ class PlayState extends MusicBeatState
 				for (timer in modchartTimers) {
 					timer.active = true;
 				}
-				if (!ClientPrefs.instantRespawn)
-					openSubState(new GameOverSubstate(boyfriend.getScreenPosition().x - boyfriend.positionArray[0], boyfriend.getScreenPosition().y - boyfriend.positionArray[1], camFollowPos.x, camFollowPos.y));
-				else
-					MusicBeatState.resetState();
-
-				// MusicBeatState.switchState(new GameOverState(boyfriend.getScreenPosition().x, boyfriend.getScreenPosition().y));
+				!ClientPrefs.instantRespawn ? openSubState(new GameOverSubstate(boyfriend.getScreenPosition().x - boyfriend.positionArray[0], boyfriend.getScreenPosition().y - boyfriend.positionArray[1], camFollowPos.x, camFollowPos.y))
+				: MusicBeatState.resetState();
 				
 				#if desktop
 				// Game Over doesn't get his own variable because it's only used here
@@ -4752,13 +4700,6 @@ class PlayState extends MusicBeatState
 
 				}
 
-				// I dunno what you need this for but here you go
-				//									- Shubs
-
-				// Shubs, this is for the "Just the Two of Us" achievement lol
-				//									- Shadow Mario
-				keysPressed[key] = true;
-
 				//more accurate hit time for the ratings? part 2 (Now that the calculations are done, go back to the time it was before for not causing a note stutter)
 				Conductor.songPosition = lastTime;
 			}
@@ -5248,7 +5189,7 @@ class PlayState extends MusicBeatState
 		{
 			phillyTrain.x -= 400;
 
-                        PlayState.currentPState.camGame.shake(.0025,.1,null,true,X);
+            PlayState.instance.camGame.shake(.0025,.1,null,true,X);
 
 			if (phillyTrain.x < -2000 && !trainFinishing)
 			{
