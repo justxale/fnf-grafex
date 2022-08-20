@@ -1,6 +1,6 @@
 package;
 
-import grafex.system.assets.manager.GrfxAssetManager;
+
 import flixel.FlxG;
 import flixel.FlxGame;
 import flixel.FlxState;
@@ -16,9 +16,10 @@ import lime.app.Application;
 import openfl.events.UncaughtErrorEvent;
 import haxe.CallStack;
 import grafex.states.substates.PrelaunchingState;
-#if debug
-#end
 import external.FPSMem;
+#if debug
+import grafex.states.TitleState;
+#end
 
 using StringTools;
 
@@ -166,7 +167,6 @@ class Main extends Sprite
 
 		#if !mobile
         addChild(new FPSMem(10, 3, 0xFFFFFF));
-		GrfxAssetManager.createObject();
 		#end
 
 		#if html5
