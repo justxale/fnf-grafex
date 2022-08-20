@@ -126,7 +126,6 @@ class Main extends Sprite
 					Sys.println(stackItem);
 			}
 		}
-		new Process();
 	}
 
 
